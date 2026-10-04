@@ -1,0 +1,111 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'infra/**'
+      - '**.md'
+  workflow_dispatch:
+
+# Only one deploy at a time. A second push while the first is still
+# invalidating would otherwise race it and could publish the older build.
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # required to request the OIDC token
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v5
+        with:
+          name: dist
+          path: dist/
+          retention-days: 5
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://hasanenv.co.uk
+    steps:
+      - name: Download build output
+        uses: actions/download-artifact@v6
+        with:
+          name: dist
+          path: dist
+
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-deploy-${{ github.run_id }}
+
+      # Two passes, because the two kinds of file want opposite cache policies.
+      #
+      # Pass 1: hashed assets. The filename changes whenever the contents do,
+      # so they can be cached forever and never revalidated.
+      - name: Upload immutable assets
+        run: |
+          aws s3 sync dist/ "s3://${{ vars.AWS_S3_BUCKET }}/" \
+            --no-progress \
+            --exclude "*" \
+            --include "_astro/*" \
+            --cache-control "public,max-age=31536000,immutable"
+
+      # Pass 2: everything else (HTML, sitemap, robots, favicon). These keep
+      # stable URLs, so they must revalidate or visitors get a stale site.
+      # --delete runs here so it sees the full desired state of the bucket.
+      - name: Upload HTML and root files
+        run: |
+          aws s3 sync dist/ "s3://${{ vars.AWS_S3_BUCKET }}/" \
+            --no-progress \
+            --exclude "_astro/*" \
+            --cache-control "public,max-age=0,must-revalidate" \
+            --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+
+          echo "Invalidation $INVALIDATION_ID created; waiting for completion."
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --id "$INVALIDATION_ID"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Deployed"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Bucket: \`${{ vars.AWS_S3_BUCKET }}\`"
+            echo "- URL: https://hasanenv.co.uk"
+          } >> "$GITHUB_STEP_SUMMARY"

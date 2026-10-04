@@ -1,0 +1,350 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import HeroGraph from '../components/HeroGraph.astro';
+import ProjectRow from '../components/ProjectRow.astro';
+import { projects, sideProjects } from '../data/projects';
+import { image } from '../data/images';
+import { site, about, skills, certifications } from '../data/site';
+
+const headshot = image(site.headshot);
+---
+
+<Base>
+  <!-- ==================== HERO ==================== -->
+  <section class="relative flex min-h-[100svh] items-center overflow-hidden">
+    <HeroGraph />
+
+    <!-- vignette so the graph never competes with the type -->
+    <div
+      class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_65%_at_55%_45%,transparent_0%,var(--color-ink)_92%)]"
+      aria-hidden="true"
+    >
+    </div>
+
+    <div class="relative mx-auto w-full max-w-6xl px-4 py-32 sm:px-6 lg:px-8">
+      <p class="eyebrow animate-[fadeUp_0.8s_cubic-bezier(0.16,1,0.3,1)_both]">
+        {site.role} · {site.location}
+      </p>
+
+      <h1
+        class="mt-5 text-[clamp(2.75rem,9vw,6.5rem)] font-medium leading-[0.95] tracking-[-0.045em] animate-[fadeUp_0.9s_cubic-bezier(0.16,1,0.3,1)_0.08s_both]"
+      >
+        {site.name}
+      </h1>
+
+      <p
+        class="mt-6 max-w-2xl text-[clamp(1.25rem,3.2vw,2rem)] font-light leading-snug tracking-[-0.02em] text-muted animate-[fadeUp_0.9s_cubic-bezier(0.16,1,0.3,1)_0.18s_both]"
+      >
+        {site.positioning}
+      </p>
+
+      <div
+        class="mt-9 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs text-faint animate-[fadeUp_0.9s_cubic-bezier(0.16,1,0.3,1)_0.26s_both]"
+      >
+        {
+          ['AWS', 'Terraform', 'Kubernetes', 'GitOps', 'GitHub Actions', 'Linux'].map((t, i) => (
+            <>
+              {i > 0 && <span class="text-line-hi">/</span>}
+              <span>{t}</span>
+            </>
+          ))
+        }
+      </div>
+
+      <div
+        class="mt-12 flex flex-wrap items-center gap-4 animate-[fadeUp_0.9s_cubic-bezier(0.16,1,0.3,1)_0.34s_both]"
+      >
+        <a
+          href="#work"
+          class="group relative overflow-hidden rounded-full bg-fg px-6 py-3 text-sm font-medium text-ink transition-colors duration-300 hover:bg-accent"
+        >
+          View the work
+        </a>
+        <a
+          href="#contact"
+          class="rounded-full border border-line-hi px-6 py-3 text-sm text-fg transition-colors duration-300 hover:border-accent hover:text-accent"
+        >
+          Get in touch
+        </a>
+      </div>
+    </div>
+
+    <div
+      class="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_0.9s_both]"
+      aria-hidden="true"
+    >
+      <span class="block h-10 w-px overflow-hidden bg-line">
+        <span class="block h-4 w-px animate-[scrollCue_2.4s_ease-in-out_infinite] bg-accent"></span>
+      </span>
+    </div>
+  </section>
+
+  <!-- ==================== WORK ==================== -->
+  <section id="work" class="scroll-mt-24 border-t border-line py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <header data-reveal class="max-w-2xl">
+        <p class="eyebrow">01 / Selected work</p>
+        <h2 class="mt-4 text-3xl font-medium tracking-tight sm:text-4xl">
+          Three projects, and the reasoning behind each one
+        </h2>
+        <p class="mt-5 text-muted">
+          Each is a full case study: the problem, the architecture, the decisions I made and the
+          trade-offs I accepted. Source is on GitHub.
+        </p>
+      </header>
+
+      <div class="mt-16 space-y-24 sm:mt-20 sm:space-y-32">
+        {projects.map((project, i) => <ProjectRow project={project} index={i} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MORE ==================== -->
+  <section class="border-t border-line py-20">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <header data-reveal>
+        <p class="eyebrow">Also on GitHub</p>
+      </header>
+
+      <ul class="mt-8 divide-y divide-line border-y border-line">
+        {
+          sideProjects.map((p, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 60}ms`}>
+              <a
+                href={p.repo}
+                target="_blank"
+                rel="noopener"
+                class="group flex flex-col gap-3 py-6 transition-colors sm:flex-row sm:items-center sm:gap-8"
+              >
+                <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <span class="flex items-center gap-2 font-mono text-sm text-fg transition-colors duration-300 group-hover:text-accent">
+                    {p.name}
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      aria-hidden="true"
+                      class="opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+                    >
+                      <path d="M7 17L17 7M8 7h9v9" />
+                    </svg>
+                  </span>
+                  <span class="text-sm text-muted">{p.description}</span>
+                </div>
+                <ul class="flex shrink-0 flex-wrap gap-2">
+                  {p.stack.map((t) => (
+                    <li class="tag">{t}</li>
+                  ))}
+                </ul>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ==================== ABOUT ==================== -->
+  <section id="about" class="scroll-mt-24 border-t border-line py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <div data-reveal class="lg:col-span-4">
+          <p class="eyebrow">02 / About</p>
+
+          <div class="mt-8 flex items-center gap-5">
+            <Image
+              src={headshot}
+              alt={site.name}
+              widths={[80, 160, 240]}
+              sizes="80px"
+              loading="lazy"
+              decoding="async"
+              class="h-20 w-20 shrink-0 rounded-full border border-line object-cover object-top grayscale transition-[filter] duration-700 hover:grayscale-0"
+            />
+            <div>
+              <p class="font-medium">{site.name}</p>
+              <p class="mt-0.5 font-mono text-xs text-faint">{site.role}</p>
+            </div>
+          </div>
+
+          {
+            site.cv && (
+              <a
+                href={site.cv}
+                class="mt-8 inline-flex items-center gap-2 rounded-full border border-line-hi px-5 py-2.5 text-sm transition-colors duration-300 hover:border-accent hover:text-accent"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+                </svg>
+                Download CV
+              </a>
+            )
+          }
+        </div>
+
+        <div data-reveal style="--reveal-delay:80ms" class="lg:col-span-8">
+          <div class="prose-tech max-w-2xl text-[1.05rem]">
+            {about.map((p) => <p set:html={p} />)}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CERTIFICATIONS ==================== -->
+  <section id="certifications" class="scroll-mt-24 border-t border-line py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <header data-reveal class="max-w-2xl">
+        <p class="eyebrow">03 / Certifications</p>
+        <h2 class="mt-4 text-3xl font-medium tracking-tight sm:text-4xl">Verified credentials</h2>
+      </header>
+
+      <ul class="mt-14 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+        {
+          certifications.map((c, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 60}ms`}>
+              <a
+                href={c.url}
+                target="_blank"
+                rel="noopener"
+                class="group flex h-full flex-col justify-between gap-5 bg-ink p-6 transition-colors duration-500 hover:bg-surface"
+              >
+                <p class="text-sm leading-snug text-fg transition-colors duration-300 group-hover:text-accent">
+                  {c.name}
+                </p>
+                <p class="flex items-center gap-2 font-mono text-xs text-faint">
+                  {c.issuer} · {c.year}
+                  <span class="flex items-center gap-1 text-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    Verify
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path d="M7 17L17 7M8 7h9v9" />
+                    </svg>
+                  </span>
+                </p>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ==================== SKILLS ==================== -->
+  <section id="skills" class="scroll-mt-24 border-t border-line py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <header data-reveal class="max-w-2xl">
+        <p class="eyebrow">04 / Skills</p>
+        <h2 class="mt-4 text-3xl font-medium tracking-tight sm:text-4xl">Tools I actually use</h2>
+        <p class="mt-5 text-muted">
+          Everything listed here appears in the projects above. Nothing is here on the strength of a tutorial alone.
+        </p>
+      </header>
+
+      {/*
+        Eight groups, laid out 2 or 4 across. Both divide evenly, so the last
+        row is never short. Skipping a 3-column step is deliberate: 8 in 3
+        columns would strand two cards on their own row.
+      */}
+      <div class="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          skills.map((group, i) => (
+            <div
+              data-reveal
+              style={`--reveal-delay:${i * 60}ms`}
+              class="rounded-lg border border-line bg-surface/40 p-6 transition-colors duration-500 hover:border-line-hi hover:bg-surface"
+            >
+              <h3 class="font-mono text-xs uppercase tracking-[0.16em] text-accent">{group.title}</h3>
+              <ul class="mt-5 space-y-2">
+                {group.items.map((item) => (
+                  <li class="text-sm text-muted">{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONTACT ==================== -->
+  <section id="contact" class="scroll-mt-24 border-t border-line py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div data-reveal class="max-w-3xl">
+        <p class="eyebrow">05 / Contact</p>
+        <h2 class="mt-4 text-[clamp(2rem,6vw,3.75rem)] font-medium leading-tight tracking-[-0.04em]">
+          Open to mid-level platform, cloud and Kubernetes roles.
+        </h2>
+        <p class="mt-6 max-w-xl text-muted">
+          The fastest way to reach me is email. I read everything and reply to anything that isn’t
+          automated.
+        </p>
+
+        <a
+          href={`mailto:${site.email}`}
+          class="group mt-10 inline-flex items-baseline gap-3 font-mono text-[clamp(1.1rem,3.5vw,1.75rem)] text-fg transition-colors duration-300 hover:text-accent"
+        >
+          <span class="relative">
+            {site.email}
+            <span
+              class="absolute inset-x-0 -bottom-1 h-px origin-right scale-x-0 bg-accent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:origin-left group-hover:scale-x-100"
+            ></span>
+          </span>
+        </a>
+
+        <div class="mt-12 flex flex-wrap gap-4">
+          <a
+            href={site.github}
+            target="_blank"
+            rel="noopener"
+            class="rounded-full border border-line-hi px-5 py-2.5 text-sm transition-colors duration-300 hover:border-accent hover:text-accent"
+          >
+            GitHub
+          </a>
+          <a
+            href={site.linkedin}
+            target="_blank"
+            rel="noopener"
+            class="rounded-full border border-line-hi px-5 py-2.5 text-sm transition-colors duration-300 hover:border-accent hover:text-accent"
+          >
+            LinkedIn
+          </a>
+          {
+            site.cv && (
+              <a
+                href={site.cv}
+                class="rounded-full border border-line-hi px-5 py-2.5 text-sm transition-colors duration-300 hover:border-accent hover:text-accent"
+              >
+                CV
+              </a>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style is:global>
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes scrollCue {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(250%);
+    }
+  }
+</style>

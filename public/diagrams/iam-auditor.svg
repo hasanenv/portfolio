@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Architecture: the auditor queries AWS IAM from EC2 under an instance role, writes a timestamped report to S3, and publishes an SNS alert only when over-privileged identities are found">
+  <defs>
+    <style>
+      .mono { font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+      .sans { font-family: "Inter", ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+      .eyebrow { font-size: 19px; letter-spacing: 3.4px; fill: #5E5E6B; }
+      .title { font-size: 26px; font-weight: 500; fill: #EDEDF0; letter-spacing: -0.3px; }
+      .sub { font-size: 20px; fill: #8C8C98; }
+      .edge-label { font-size: 18px; fill: #8C8C98; }
+      .accent { fill: #22D3EE; }
+      .box { fill: #141418; stroke: #202027; stroke-width: 1.5; }
+      .wire { stroke: #2E2E38; stroke-width: 1.75; fill: none; }
+      .wire-accent { stroke: #22D3EE; stroke-width: 1.75; fill: none; opacity: 0.65; }
+      .glyph { fill: none; stroke: #22D3EE; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+      .glyph-muted { fill: none; stroke: #8C8C98; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#2E2E38" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#22D3EE" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#0E0E11"/>
+
+  <!-- header -->
+  <text class="mono eyebrow" x="100" y="108">IAM PERMISSIONS AUDITOR</text>
+  <line x1="100" y1="140" x2="1500" y2="140" stroke="#202027" stroke-width="1.5"/>
+
+  <!-- column headers -->
+  <text class="mono eyebrow" x="100" y="226">SOURCE</text>
+  <text class="mono eyebrow" x="640" y="226">AUDIT</text>
+  <text class="mono eyebrow" x="1180" y="226">OUTPUT</text>
+
+  <!-- ===================== stage 1: IAM ===================== -->
+  <rect class="box" x="100" y="380" width="320" height="200" rx="10"/>
+  <!-- glyph: three identities -->
+  <g transform="translate(140, 424)">
+    <circle class="glyph" cx="11" cy="11" r="8"/>
+    <circle class="glyph-muted" cx="35" cy="11" r="8"/>
+    <circle class="glyph-muted" cx="59" cy="11" r="8"/>
+  </g>
+  <text class="sans title" x="140" y="500">AWS IAM</text>
+  <text class="mono sub" x="140" y="534">users · roles · groups</text>
+
+  <!-- ===================== stage 2: auditor ===================== -->
+  <rect class="box" x="640" y="340" width="320" height="280" rx="10"/>
+  <rect x="640" y="340" width="320" height="280" rx="10" fill="none" stroke="#22D3EE" stroke-width="1.5" opacity="0.28"/>
+  <!-- glyph: prompt chevron -->
+  <g transform="translate(680, 390)">
+    <path class="glyph" d="M 2 4 L 14 13 L 2 22"/>
+    <line class="glyph" x1="20" y1="22" x2="44" y2="22"/>
+  </g>
+  <text class="sans title" x="680" y="488">iam-auditor.sh</text>
+  <text class="mono sub" x="680" y="522">EC2 · instance role</text>
+  <line x1="680" y1="552" x2="920" y2="552" stroke="#202027" stroke-width="1.5"/>
+  <text class="mono sub" x="680" y="588" font-size="18">no stored credentials</text>
+
+  <!-- ===================== stage 3a: S3 ===================== -->
+  <rect class="box" x="1180" y="282" width="320" height="170" rx="10"/>
+  <!-- glyph: stacked layers -->
+  <g transform="translate(1220, 320)">
+    <path class="glyph-muted" d="M 1 9 L 15 2 L 29 9 L 15 16 Z"/>
+    <path class="glyph-muted" d="M 1 18 L 15 25 L 29 18"/>
+  </g>
+  <text class="sans title" x="1220" y="396" font-size="24">S3</text>
+  <text class="mono sub" x="1220" y="428" font-size="18">timestamped audit trail</text>
+
+  <!-- ===================== stage 3b: SNS ===================== -->
+  <rect class="box" x="1180" y="548" width="320" height="170" rx="10"/>
+  <!-- glyph: broadcast -->
+  <g transform="translate(1220, 586)">
+    <circle class="glyph" cx="6" cy="20" r="4"/>
+    <path class="glyph" d="M 14 14 A 11 11 0 0 1 14 26"/>
+    <path class="glyph" d="M 21 8 A 20 20 0 0 1 21 32"/>
+  </g>
+  <text class="sans title" x="1220" y="662" font-size="24">SNS</text>
+  <text class="mono sub" x="1220" y="694" font-size="18">alert only on violation</text>
+
+  <!-- ===================== wires ===================== -->
+  <!-- IAM -> auditor -->
+  <path class="wire" d="M 420 480 L 640 480" marker-end="url(#arrow)"/>
+  <text class="mono edge-label" x="530" y="462" text-anchor="middle">query</text>
+
+  <!-- auditor -> S3 (every run) -->
+  <path class="wire" d="M 960 440 L 1070 440 L 1070 367 L 1180 367" marker-end="url(#arrow)"/>
+  <text class="mono edge-label" x="1070" y="336" text-anchor="middle">every run</text>
+
+  <!-- auditor -> SNS (conditional) -->
+  <path class="wire-accent" d="M 960 520 L 1070 520 L 1070 633 L 1180 633" stroke-dasharray="7 7" marker-end="url(#arrow-accent)"/>
+  <text class="mono edge-label accent" x="1070" y="676" text-anchor="middle" opacity="0.85">if findings</text>
+
+  <!-- footer -->
+  <line x1="100" y1="848" x2="1500" y2="848" stroke="#202027" stroke-width="1.5"/>
+  <text class="mono" x="100" y="896" font-size="18" fill="#5E5E6B">STS verifies the target account before any IAM call is made</text>
+  <g transform="translate(1286, 880)">
+    <line x1="0" y1="0" x2="34" y2="0" stroke="#2E2E38" stroke-width="1.75"/>
+    <text class="mono" x="44" y="5" font-size="17" fill="#5E5E6B">always</text>
+  </g>
+  <g transform="translate(1286, 912)">
+    <line x1="0" y1="0" x2="34" y2="0" stroke="#22D3EE" stroke-width="1.75" stroke-dasharray="7 7" opacity="0.65"/>
+    <text class="mono" x="44" y="5" font-size="17" fill="#5E5E6B">conditional</text>
+  </g>
+</svg>

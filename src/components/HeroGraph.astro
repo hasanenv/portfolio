@@ -1,0 +1,260 @@
+---
+// Ambient node/edge field behind the hero. Canvas-based, DPR-aware,
+// pauses when off-screen or backgrounded, static when reduced motion is set.
+---
+
+<canvas
+  data-hero-graph
+  class="pointer-events-none absolute inset-0 h-full w-full"
+  aria-hidden="true"
+></canvas>
+
+<script>
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-graph]');
+  if (canvas) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const ACCENT = '34, 211, 238';
+    const LINK_DISTANCE = 190;
+
+    interface Node {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      r: number;
+      /** larger "cluster" nodes sit at the centre of their neighbourhood */
+      hub: boolean;
+      phase: number;
+    }
+
+    interface Packet {
+      a: number;
+      b: number;
+      t: number;
+      speed: number;
+    }
+
+    let nodes: Node[] = [];
+    let packets: Packet[] = [];
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let raf = 0;
+    let running = false;
+    const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+
+    const rand = (min: number, max: number) => min + Math.random() * (max - min);
+
+    function build() {
+      const area = w * h;
+      // density-scaled so a phone doesn't render a desktop's worth of nodes
+      const count = Math.max(24, Math.min(72, Math.round(area / 17000)));
+      const clusterCount = Math.max(3, Math.round(count / 9));
+
+      // Seed cluster centres, then scatter members around them. Uniform random
+      // placement reads as a starfield; clustering reads as a topology.
+      const centres = Array.from({ length: clusterCount }, () => ({
+        x: rand(w * 0.08, w * 0.92),
+        y: rand(h * 0.12, h * 0.88),
+      }));
+
+      nodes = Array.from({ length: count }, (_, i) => {
+        const centre = centres[i % clusterCount];
+        const isCentre = i < clusterCount;
+        const spread = isCentre ? 0 : rand(30, 135);
+        const angle = rand(0, Math.PI * 2);
+        return {
+          x: centre.x + Math.cos(angle) * spread,
+          y: centre.y + Math.sin(angle) * spread,
+          vx: rand(-0.11, 0.11),
+          vy: rand(-0.11, 0.11),
+          r: isCentre ? rand(2.6, 3.6) : rand(1.1, 1.9),
+          hub: isCentre,
+          phase: rand(0, Math.PI * 2),
+        };
+      });
+      packets = [];
+    }
+
+    function resize() {
+      if (!canvas || !ctx) return;
+      const rect = canvas.getBoundingClientRect();
+
+      // A hidden or not-yet-laid-out pane reports 0x0. Building a graph for a
+      // zero-size canvas would leave it permanently empty, so bail and wait
+      // for the ResizeObserver to report real dimensions.
+      if (rect.width < 1 || rect.height < 1) return;
+
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = rect.width;
+      h = rect.height;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+      // Paint one frame immediately. requestAnimationFrame never fires while
+      // the document is hidden, so without this the hero can render blank
+      // until the tab is focused.
+      draw(0);
+    }
+
+    function spawnPacket() {
+      if (packets.length > 5 || nodes.length < 2) return;
+      const a = Math.floor(Math.random() * nodes.length);
+      let best = -1;
+      let bestDist = LINK_DISTANCE;
+      for (let i = 0; i < nodes.length; i++) {
+        if (i === a) continue;
+        const d = Math.hypot(nodes[a].x - nodes[i].x, nodes[a].y - nodes[i].y);
+        if (d < bestDist) {
+          bestDist = d;
+          best = i;
+        }
+      }
+      if (best >= 0) packets.push({ a, b: best, t: 0, speed: rand(0.006, 0.013) });
+    }
+
+    function draw(time: number) {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, w, h);
+
+      // parallax easing
+      pointer.x += (pointer.tx - pointer.x) * 0.045;
+      pointer.y += (pointer.ty - pointer.y) * 0.045;
+
+      // ---- edges ----
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > LINK_DISTANCE) continue;
+
+          // squared falloff keeps tight clusters bright and long links faint
+          const strength = (1 - dist / LINK_DISTANCE) ** 1.6;
+          ctx.strokeStyle = `rgba(${ACCENT}, ${(strength * 0.42).toFixed(3)})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x + pointer.x, nodes[i].y + pointer.y);
+          ctx.lineTo(nodes[j].x + pointer.x, nodes[j].y + pointer.y);
+          ctx.stroke();
+        }
+      }
+
+      // ---- packets travelling along edges ----
+      for (let p = packets.length - 1; p >= 0; p--) {
+        const pk = packets[p];
+        const a = nodes[pk.a];
+        const b = nodes[pk.b];
+        if (!a || !b) {
+          packets.splice(p, 1);
+          continue;
+        }
+        pk.t += pk.speed;
+        if (pk.t >= 1) {
+          packets.splice(p, 1);
+          continue;
+        }
+        const x = a.x + (b.x - a.x) * pk.t + pointer.x;
+        const y = a.y + (b.y - a.y) * pk.t + pointer.y;
+        // fade in and out across the traversal
+        const alpha = Math.sin(pk.t * Math.PI) * 0.85;
+        ctx.fillStyle = `rgba(${ACCENT}, ${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // ---- nodes ----
+      for (const n of nodes) {
+        const pulse = reduced ? 0.5 : 0.5 + Math.sin(time * 0.0009 + n.phase) * 0.28;
+        const x = n.x + pointer.x;
+        const y = n.y + pointer.y;
+
+        if (n.hub) {
+          ctx.strokeStyle = `rgba(${ACCENT}, ${(pulse * 0.32).toFixed(3)})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(x, y, n.r + 5, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = n.hub
+          ? `rgba(${ACCENT}, ${(0.55 + pulse * 0.4).toFixed(3)})`
+          : `rgba(200, 212, 224, ${(0.3 + pulse * 0.3).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(x, y, n.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function step(time: number) {
+      for (const n of nodes) {
+        n.x += n.vx;
+        n.y += n.vy;
+        // wrap with a margin so nodes drift off and back rather than bouncing
+        if (n.x < -40) n.x = w + 40;
+        if (n.x > w + 40) n.x = -40;
+        if (n.y < -40) n.y = h + 40;
+        if (n.y > h + 40) n.y = -40;
+      }
+      if (Math.random() < 0.05) spawnPacket();
+      draw(time);
+      raf = requestAnimationFrame(step);
+    }
+
+    function start() {
+      if (running || reduced) return;
+      running = true;
+      raf = requestAnimationFrame(step);
+    }
+
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+    }
+
+    resize();
+
+    // ResizeObserver rather than a window listener: it also fires once the
+    // element first gets real dimensions, which covers the hidden-pane case.
+    let resizeTimer: number;
+    let lastW = 0;
+    let lastH = 0;
+    const ro = new ResizeObserver(([entry]) => {
+      const box = entry.contentRect;
+      // Ignore sub-pixel jitter and mobile URL-bar height changes.
+      if (Math.abs(box.width - lastW) < 2 && Math.abs(box.height - lastH) < 60) return;
+      lastW = box.width;
+      lastH = box.height;
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resize, 150);
+    });
+    ro.observe(canvas);
+
+    if (!reduced) {
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          // a few pixels of drift, not a parallax funfair
+          pointer.tx = (e.clientX / window.innerWidth - 0.5) * 18;
+          pointer.ty = (e.clientY / window.innerHeight - 0.5) * 18;
+        },
+        { passive: true }
+      );
+
+      document.addEventListener('visibilitychange', () => {
+        document.hidden ? stop() : start();
+      });
+
+      // don't burn frames once the hero has scrolled away
+      const io = new IntersectionObserver(
+        ([entry]) => (entry.isIntersecting ? start() : stop()),
+        { threshold: 0 }
+      );
+      io.observe(canvas);
+    }
+  }
+</script>

@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink:      #08080A;
+  --color-surface:  #0E0E11;
+  --color-raised:   #141418;
+  --color-line:     #202027;
+  --color-line-hi:  #2E2E38;
+  --color-fg:       #EDEDF0;
+  --color-muted:    #8C8C98;
+  --color-faint:    #5E5E6B;
+  --color-accent:   #22D3EE;
+  --color-accent-dim: #0E7490;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--color-accent); color: #04121A; }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  h1, h2, h3 { letter-spacing: -0.035em; }
+}
+
+@layer components {
+  /* ---- scroll reveal ---- */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s var(--ease-out-expo), transform 0.7s var(--ease-out-expo);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  [data-reveal].is-visible { opacity: 1; transform: none; }
+
+  /* ---- mono eyebrow label ---- */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  /* ---- tech tag ---- */
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--color-line);
+    border-radius: 3px;
+    color: var(--color-muted);
+    background: color-mix(in oklab, var(--color-raised) 70%, transparent);
+    white-space: nowrap;
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .group:hover .tag { border-color: var(--color-line-hi); color: var(--color-fg); }
+
+  /* ---- animated underline link ---- */
+  .ulink {
+    position: relative;
+    color: var(--color-fg);
+    transition: color 0.25s;
+  }
+  .ulink::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -2px;
+    width: 100%; height: 1px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.4s var(--ease-out-expo);
+  }
+  .ulink:hover { color: var(--color-accent); }
+  .ulink:hover::after { transform: scaleX(1); transform-origin: left; }
+
+  /* ---- hairline rule ---- */
+  .rule { height: 1px; background: linear-gradient(90deg, var(--color-line), transparent); }
+}
+
+/* ---- prose for case studies ---- */
+.prose-tech { color: var(--color-muted); line-height: 1.75; }
+.prose-tech p { margin-block: 1rem; }
+.prose-tech strong { color: var(--color-fg); font-weight: 500; }
+.prose-tech code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--color-accent);
+  background: var(--color-raised);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+.prose-tech ul { margin-block: 1rem; padding-left: 0; list-style: none; }
+.prose-tech li { position: relative; padding-left: 1.25rem; margin-block: 0.5rem; }
+.prose-tech li::before {
+  content: "";
+  position: absolute; left: 0; top: 0.7em;
+  width: 6px; height: 1px;
+  background: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+}

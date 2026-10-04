@@ -1,0 +1,147 @@
+---
+import { site, nav } from '../data/site';
+
+interface Props {
+  backLink?: { href: string; label: string };
+}
+const { backLink } = Astro.props;
+---
+
+<header
+  data-header
+  class="fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-500 border-b border-transparent [&.is-scrolled]:border-line [&.is-scrolled]:bg-ink/75 [&.is-scrolled]:backdrop-blur-xl"
+>
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+    {
+      backLink ? (
+        <a
+          href={backLink.href}
+          class="group flex items-center gap-2 font-mono text-xs tracking-wide text-muted transition-colors hover:text-fg"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="transition-transform duration-300 group-hover:-translate-x-1">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          {backLink.label}
+        </a>
+      ) : (
+        <a href="/" class="group flex items-center gap-2.5" aria-label={`${site.name}, home`}>
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" style="animation-duration:2.8s"></span>
+            <span class="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
+          </span>
+          <span class="font-mono text-sm font-medium tracking-tight text-fg">hasanenv</span>
+        </a>
+      )
+    }
+
+    <nav class="hidden items-center gap-6 md:flex lg:gap-8" aria-label="Primary">
+      {
+        nav.map((item) => (
+          <a
+            href={item.href}
+            data-navlink
+            data-section={item.href.split('#')[1]}
+            class="text-sm text-muted transition-colors duration-300 hover:text-fg"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+      {
+        site.cv && (
+          <a
+            href={site.cv}
+            class="group relative overflow-hidden rounded-full border border-line-hi px-4 py-1.5 text-sm text-fg transition-colors duration-300 hover:border-accent hover:text-accent"
+          >
+            CV
+          </a>
+        )
+      }
+    </nav>
+
+    <button
+      type="button"
+      data-menu-toggle
+      class="relative z-50 flex h-9 w-9 items-center justify-center rounded md:hidden"
+      aria-label="Open menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      <span class="relative block h-3.5 w-5">
+        <span data-bar="top" class="absolute left-0 top-0 h-px w-full bg-fg transition-transform duration-300"></span>
+        <span data-bar="bottom" class="absolute bottom-0 left-0 h-px w-full bg-fg transition-transform duration-300"></span>
+      </span>
+    </button>
+  </div>
+</header>
+
+<div
+  id="mobile-menu"
+  data-menu
+  class="pointer-events-none fixed inset-0 z-40 flex flex-col justify-center bg-ink px-8 opacity-0 transition-opacity duration-400 md:hidden"
+  aria-hidden="true"
+>
+  <nav class="flex flex-col gap-1" aria-label="Mobile">
+    {
+      nav.map((item, i) => (
+        <a
+          href={item.href}
+          data-menu-item
+          style={`transition-delay:${60 + i * 50}ms`}
+          class="translate-y-3 border-b border-line py-5 text-3xl tracking-tight text-fg opacity-0 transition-all duration-500"
+        >
+          {item.label}
+        </a>
+      ))
+    }
+    {
+      site.cv && (
+        <a
+          href={site.cv}
+          data-menu-item
+          style={`transition-delay:${60 + nav.length * 50}ms`}
+          class="translate-y-3 py-5 text-3xl tracking-tight text-accent opacity-0 transition-all duration-500"
+        >
+          Download CV
+        </a>
+      )
+    }
+  </nav>
+</div>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+  const items = document.querySelectorAll<HTMLElement>('[data-menu-item]');
+  const top = document.querySelector<HTMLElement>('[data-bar="top"]');
+  const bottom = document.querySelector<HTMLElement>('[data-bar="bottom"]');
+
+  let open = false;
+
+  const setOpen = (next: boolean) => {
+    if (!menu || !toggle) return;
+    open = next;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    menu.setAttribute('aria-hidden', String(!open));
+    menu.classList.toggle('opacity-0', !open);
+    menu.classList.toggle('pointer-events-none', !open);
+    document.body.style.overflow = open ? 'hidden' : '';
+
+    items.forEach((el) => {
+      el.classList.toggle('opacity-0', !open);
+      el.classList.toggle('translate-y-3', !open);
+    });
+
+    if (top && bottom) {
+      top.style.transform = open ? 'translateY(6.5px) rotate(45deg)' : '';
+      bottom.style.transform = open ? 'translateY(-6.5px) rotate(-45deg)' : '';
+    }
+  };
+
+  toggle?.addEventListener('click', () => setOpen(!open));
+  items.forEach((el) => el.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && open) setOpen(false);
+  });
+</script>
