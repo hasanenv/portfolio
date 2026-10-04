@@ -47,6 +47,10 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
+    # Skip rather than fail before the infrastructure exists. Until Terraform
+    # has been applied and the repository variables are set, there is nothing
+    # to deploy to, and a red cross here would be misleading.
+    if: vars.AWS_DEPLOY_ROLE_ARN != '' && vars.AWS_S3_BUCKET != ''
     environment:
       name: production
       url: https://hasanenv.co.uk

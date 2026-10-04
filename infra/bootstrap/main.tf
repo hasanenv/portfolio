@@ -83,6 +83,35 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
   }
 }
 
+// Terraform already talks to S3 over HTTPS, so this denies something that
+// does not currently happen. It is here so the bucket's own policy states the
+// requirement rather than relying on every future client to get it right.
+data "aws_iam_policy_document" "state" {
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.state.arn, "${aws_s3_bucket.state.arn}/*"]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "state" {
+  bucket     = aws_s3_bucket.state.id
+  policy     = data.aws_iam_policy_document.state.json
+  depends_on = [aws_s3_bucket_public_access_block.state]
+}
+
 output "state_bucket" {
   description = "Pass this to the main stack: terraform init -backend-config=\"bucket=<this>\""
   value       = aws_s3_bucket.state.id
