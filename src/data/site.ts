@@ -16,7 +16,7 @@ export const site = {
 
   // Set to '/hasan-kamran-cv.pdf' (and drop the file in /public) to switch the
   // Download CV buttons back on. Empty string hides them everywhere.
-  cv: '',
+  cv: '/hasan-kamran-cv.pdf',
   headshot: '/assets/headshot.jpg',
 
   url: 'https://hasanenv.co.uk',
