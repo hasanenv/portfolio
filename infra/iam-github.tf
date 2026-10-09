@@ -6,8 +6,6 @@
 // nothing durable to leak and nothing to rotate.
 // ---------------------------------------------------------------------------
 
-data "aws_caller_identity" "current" {}
-
 # Account-wide singleton. If the account already trusts GitHub's OIDC issuer,
 # set create_oidc_provider = false and this falls through to the data source.
 resource "aws_iam_openid_connect_provider" "github" {

@@ -3,7 +3,21 @@ dist/
 .astro/
 .DS_Store
 *.log
+
+# Terraform
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Secrets
 .env
+.env.*
+!.env.example
