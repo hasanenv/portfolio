@@ -47,21 +47,50 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
-    # Skip rather than fail before the infrastructure exists. Until Terraform
-    # has been applied and the repository variables are set, there is nothing
-    # to deploy to, and a red cross here would be misleading.
-    if: vars.AWS_DEPLOY_ROLE_ARN != '' && vars.AWS_S3_BUCKET != ''
     environment:
       name: production
       url: https://hasanenv.co.uk
     steps:
+      # Checked inside the job rather than as a job-level `if`. A job-level
+      # condition is evaluated before the environment is attached, so it
+      # cannot see environment-scoped variables and would skip even when the
+      # config is present. This also reports which value is missing instead
+      # of skipping silently.
+      - name: Check configuration
+        id: check
+        run: |
+          missing=""
+          [ -n "${{ vars.AWS_DEPLOY_ROLE_ARN }}" ] || missing="$missing AWS_DEPLOY_ROLE_ARN"
+          [ -n "${{ vars.AWS_REGION }}" ]          || missing="$missing AWS_REGION"
+          [ -n "${{ vars.AWS_S3_BUCKET }}" ]       || missing="$missing AWS_S3_BUCKET"
+          [ -n "${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}" ] || missing="$missing AWS_CLOUDFRONT_DISTRIBUTION_ID"
+
+          if [ -n "$missing" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Deploy skipped. Missing repository variables:$missing"
+            {
+              echo "### Deploy skipped"
+              echo ""
+              echo "These repository variables are not set or not visible:"
+              echo ""
+              for v in $missing; do echo "- \`$v\`"; done
+              echo ""
+              echo "Set them under Settings > Secrets and variables > Actions > **Variables**."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "All four variables present."
+          fi
+
       - name: Download build output
+        if: steps.check.outputs.configured == 'true'
         uses: actions/download-artifact@v6
         with:
           name: dist
           path: dist
 
       - name: Authenticate to AWS
+        if: steps.check.outputs.configured == 'true'
         uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
@@ -73,6 +102,7 @@ jobs:
       # Pass 1: hashed assets. The filename changes whenever the contents do,
       # so they can be cached forever and never revalidated.
       - name: Upload immutable assets
+        if: steps.check.outputs.configured == 'true'
         run: |
           aws s3 sync dist/ "s3://${{ vars.AWS_S3_BUCKET }}/" \
             --no-progress \
@@ -84,6 +114,7 @@ jobs:
       # stable URLs, so they must revalidate or visitors get a stale site.
       # --delete runs here so it sees the full desired state of the bucket.
       - name: Upload HTML and root files
+        if: steps.check.outputs.configured == 'true'
         run: |
           aws s3 sync dist/ "s3://${{ vars.AWS_S3_BUCKET }}/" \
             --no-progress \
@@ -92,6 +123,7 @@ jobs:
             --delete
 
       - name: Invalidate CloudFront
+        if: steps.check.outputs.configured == 'true'
         run: |
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id "${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}" \
@@ -105,6 +137,7 @@ jobs:
             --id "$INVALIDATION_ID"
 
       - name: Summary
+        if: steps.check.outputs.configured == 'true'
         run: |
           {
             echo "### Deployed"
