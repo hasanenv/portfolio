@@ -33,10 +33,15 @@ variable "github_repository" {
   }
 }
 
-variable "github_branch" {
-  description = "Only this branch may assume the deploy role."
+variable "github_environment" {
+  description = <<-EOT
+    GitHub Actions environment the deploy job runs in. A job with an
+    `environment:` receives an environment-scoped OIDC subject, which is what
+    the role trusts. Restrict this environment to the main branch in the
+    repository settings.
+  EOT
   type        = string
-  default     = "main"
+  default     = "production"
 }
 
 variable "create_oidc_provider" {

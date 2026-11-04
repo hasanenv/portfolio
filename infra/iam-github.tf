@@ -44,12 +44,16 @@ data "aws_iam_policy_document" "deploy_assume" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Pinned to one repository AND one branch. Without the sub condition any
-    # GitHub repository in the world could assume this role.
+    # Pinned to one repository AND one deployment environment.
+    #
+    # A job that references an `environment:` gets an environment-scoped
+    # subject from GitHub, NOT a branch-scoped one, so the ref form never
+    # matches here. Branch restriction is enforced on the GitHub side instead,
+    # by the production environment's deployment branch rule.
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:ref:refs/heads/${var.github_branch}"]
+      values   = ["repo:${var.github_repository}:environment:${var.github_environment}"]
     }
   }
 }
@@ -87,9 +91,9 @@ data "aws_iam_policy_document" "deploy" {
 }
 
 resource "aws_iam_role" "deploy" {
-  name               = "${replace(var.domain_name, ".", "-")}-github-deploy"
-  description        = "Assumed by GitHub Actions to publish the portfolio site"
-  assume_role_policy = data.aws_iam_policy_document.deploy_assume.json
+  name                 = "${replace(var.domain_name, ".", "-")}-github-deploy"
+  description          = "Assumed by GitHub Actions to publish the portfolio site"
+  assume_role_policy   = data.aws_iam_policy_document.deploy_assume.json
   max_session_duration = 3600
 }
 
