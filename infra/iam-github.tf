@@ -26,6 +26,16 @@ data "aws_iam_openid_connect_provider" "github" {
 
 locals {
   oidc_provider_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : data.aws_iam_openid_connect_provider.github[0].arn
+
+  # GitHub can be configured to put immutable numeric IDs in the OIDC subject,
+  # giving `owner@owner_id/repo@repo_id` instead of plain `owner/repo`. That is
+  # the stronger form: a repository that is deleted and recreated under the
+  # same name gets a new ID and no longer matches this trust. Supply both IDs
+  # to use it; leave them null for the plain form.
+  github_owner = split("/", var.github_repository)[0]
+  github_repo  = split("/", var.github_repository)[1]
+
+  github_subject_repo = var.github_owner_id != null && var.github_repository_id != null ? "${local.github_owner}@${var.github_owner_id}/${local.github_repo}@${var.github_repository_id}" : var.github_repository
 }
 
 data "aws_iam_policy_document" "deploy_assume" {
@@ -53,7 +63,7 @@ data "aws_iam_policy_document" "deploy_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:environment:${var.github_environment}"]
+      values   = ["repo:${local.github_subject_repo}:environment:${var.github_environment}"]
     }
   }
 }

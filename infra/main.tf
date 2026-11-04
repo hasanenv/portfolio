@@ -76,9 +76,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "site" {
 
 data "aws_iam_policy_document" "bucket" {
   statement {
-    sid     = "AllowCloudFrontRead"
-    effect  = "Allow"
-    actions = ["s3:GetObject"]
+    sid       = "AllowCloudFrontRead"
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.site.arn}/*"]
 
     principals {

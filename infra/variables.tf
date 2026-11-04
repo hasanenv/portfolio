@@ -44,6 +44,26 @@ variable "github_environment" {
   default     = "production"
 }
 
+variable "github_owner_id" {
+  description = <<-EOT
+    Numeric account ID of the repository owner. Set together with
+    github_repository_id when the repository issues ID-based OIDC subjects.
+    Read it from the token's sub claim, or from the GitHub API:
+    gh api users/<owner> --jq .id
+  EOT
+  type        = string
+  default     = "185711770"
+}
+
+variable "github_repository_id" {
+  description = <<-EOT
+    Numeric ID of the repository. See github_owner_id.
+    gh api repos/<owner>/<repo> --jq .id
+  EOT
+  type        = string
+  default     = "1404473017"
+}
+
 variable "create_oidc_provider" {
   description = <<-EOT
     Create the GitHub OIDC provider in this account. Set to false if the account
