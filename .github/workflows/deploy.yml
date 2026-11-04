@@ -89,6 +89,18 @@ jobs:
           name: dist
           path: dist
 
+      # Temporary. Prints the identity GitHub presents to AWS so it can be
+      # compared against the role's trust policy. Selected claims only; the
+      # token itself is masked and never printed.
+      - name: Show OIDC claims
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          T=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)
+          echo "::add-mask::$T"
+          export T
+          python3 -c "import base64,json,os;p=os.environ['T'].split('.')[1];p+='='*(-len(p)%4);c=json.loads(base64.urlsafe_b64decode(p));print(json.dumps({k:c.get(k) for k in ['sub','aud','repository','ref','environment','workflow_ref','event_name']},indent=2))"
+
       - name: Authenticate to AWS
         if: steps.check.outputs.configured == 'true'
         uses: aws-actions/configure-aws-credentials@v5
