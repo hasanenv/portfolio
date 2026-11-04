@@ -14,9 +14,12 @@ export const site = {
   github: 'https://github.com/hasanenv',
   linkedin: 'https://www.linkedin.com/in/hasankamranenv',
 
-  // Set to '/hasan-kamran-cv.pdf' (and drop the file in /public) to switch the
-  // Download CV buttons back on. Empty string hides them everywhere.
-  cv: '/hasan-kamran-cv.pdf',
+  // Empty hides the CV buttons in the nav, the contact section and the footer.
+  // Deliberately off: the site and LinkedIn already cover the same ground, and
+  // a hosted CV is a public file with personal contact details in it. Setting a
+  // path here is not enough on its own, the PDF has to be in /public too, or
+  // the links point at nothing.
+  cv: '',
   headshot: '/assets/headshot.jpg',
 
   url: 'https://hasanenv.co.uk',
