@@ -8,6 +8,9 @@ import { image } from '../data/images';
 import { site, about, skills, certifications } from '../data/site';
 
 const headshot = image(site.headshot);
+
+// Shown instead of the bare URL in the contact section: linkedin.com/in/<handle>.
+const linkedinHandle = site.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 ---
 
 <Base>
@@ -276,19 +279,21 @@ const headshot = image(site.headshot);
       <div data-reveal class="max-w-3xl">
         <p class="eyebrow">05 / Contact</p>
         <h2 class="mt-4 text-[clamp(2rem,6vw,3.75rem)] font-medium leading-tight tracking-[-0.04em]">
-          Open to mid-level platform, cloud and Kubernetes roles.
+          Open to roles where the delivery path is owned end to end.
         </h2>
         <p class="mt-6 max-w-xl text-muted">
-          The fastest way to reach me is email. I read everything and reply to anything that isn’t
-          automated.
+          LinkedIn is the best place to reach me. Email works just as well, and I reply to anything
+          that isn’t automated.
         </p>
 
         <a
-          href={`mailto:${site.email}`}
+          href={site.linkedin}
+          target="_blank"
+          rel="noopener"
           class="group mt-10 inline-flex items-baseline gap-3 font-mono text-[clamp(1.1rem,3.5vw,1.75rem)] text-fg transition-colors duration-300 hover:text-accent"
         >
           <span class="relative">
-            {site.email}
+            {linkedinHandle}
             <span
               class="absolute inset-x-0 -bottom-1 h-px origin-right scale-x-0 bg-accent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:origin-left group-hover:scale-x-100"
             ></span>
@@ -297,20 +302,18 @@ const headshot = image(site.headshot);
 
         <div class="mt-12 flex flex-wrap gap-4">
           <a
+            href={`mailto:${site.email}`}
+            class="rounded-full border border-line-hi px-5 py-2.5 text-sm transition-colors duration-300 hover:border-accent hover:text-accent"
+          >
+            Email
+          </a>
+          <a
             href={site.github}
             target="_blank"
             rel="noopener"
             class="rounded-full border border-line-hi px-5 py-2.5 text-sm transition-colors duration-300 hover:border-accent hover:text-accent"
           >
             GitHub
-          </a>
-          <a
-            href={site.linkedin}
-            target="_blank"
-            rel="noopener"
-            class="rounded-full border border-line-hi px-5 py-2.5 text-sm transition-colors duration-300 hover:border-accent hover:text-accent"
-          >
-            LinkedIn
           </a>
           {
             site.cv && (
