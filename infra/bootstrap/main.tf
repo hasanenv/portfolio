@@ -8,8 +8,10 @@
 //   terraform -chdir=infra/bootstrap init
 //   terraform -chdir=infra/bootstrap apply
 //
-// Commit the resulting terraform.tfstate here or keep it locally. It holds
-// nothing sensitive, just the bucket definition.
+// The resulting terraform.tfstate stays local and is gitignored. State is not
+// inert documentation: Terraform records resolved attribute values in it, the
+// account ID among them, so it does not belong in a public repository. Losing
+// it only costs an import of one bucket, which is cheaper than publishing it.
 // ---------------------------------------------------------------------------
 
 terraform {

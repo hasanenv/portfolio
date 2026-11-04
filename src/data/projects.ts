@@ -79,8 +79,8 @@ export const projects: Project[] = [
         title: 'Pull-based delivery, not push',
         points: [
           'ArgoCD runs in-cluster and syncs from Git. CI never holds cluster credentials.',
-          'Auto-sync is enabled, so drift is corrected continuously rather than discovered at the next deploy.',
-          'Rollback is a Git revert rather than a pipeline re-run.',
+          'Auto-sync is enabled, so drift is corrected continuously and never waits for the next deploy.',
+          'Rollback is a Git revert, not a pipeline re-run.',
           'Declared state lives in a repository, not in operator command history.',
         ],
       },
@@ -98,7 +98,7 @@ export const projects: Project[] = [
           'Multi-AZ RDS PostgreSQL for relational data.',
           'EBS gp3 for Git repository files.',
           'Valkey for sessions and cache, which are reconstructible.',
-          'Keeps the compute layer replaceable rather than precious.',
+          'Keeps the compute layer replaceable, not precious.',
         ],
       },
       {
@@ -139,7 +139,7 @@ export const projects: Project[] = [
       'Fixed hourly costs run regardless of load: the EKS control plane, both NAT gateways, the NLB and Multi-AZ RDS.',
       'There is no destroy pipeline. Teardown is a documented manual sequence in the README, and automating it is the obvious next addition.',
       'Instance sizing is a cost decision for demonstration, not a capacity recommendation.',
-      'Specific CVEs are whitelisted in <code>.trivyignore</code> with written justification, rather than lowering the scan threshold.',
+      'Specific CVEs are whitelisted in <code>.trivyignore</code> with written justification. The scan threshold stays where it is.',
       'The live environment has been torn down. The screenshots are from the running deployment.',
     ],
   },
@@ -185,7 +185,7 @@ export const projects: Project[] = [
       'Three GitHub Actions workflows with clean separation of responsibility: image build and push, manual Terraform apply, and a manual destroy with its own dedicated IAM role.',
       'Every pipeline authenticates to AWS through OIDC federation. There are no long-lived access keys in the repository or in GitHub secrets.',
       'Images are built multi-stage, scanned with Grype at a high-severity cut-off, tagged by commit SHA and pushed to ECR. The current tag is written to SSM Parameter Store so infrastructure applies pick up the right immutable image without a manual edit.',
-      'The scan step prints high and critical findings as a table before it gates the build, so a failed run says what failed rather than only that it did.',
+      'The scan step prints high and critical findings as a table before it gates the build, so a failed run says what failed, not just that it did.',
       'The ALB spans two Availability Zones with HTTPS enforced via ACM and HTTP redirected. Fargate tasks run in private subnets with centralised CloudWatch logging and Container Insights.',
     ],
     decisions: [
@@ -218,7 +218,7 @@ export const projects: Project[] = [
         points: [
           'CI/CD roles and the ECR repository sit in a separate bootstrap root with its own state key, so a pipeline cannot destroy the identity it is running as.',
           'This came out of a real failure: the destroy pipeline deleted its own IAM role mid-run, stranding a live load balancer, ECS service and VPC with the state unsaved and the lock held.',
-          'An explicit IAM Deny on <code>DeleteRole</code> and <code>DetachRolePolicy</code> backs the split up rather than relying on layout alone.',
+          'An explicit IAM Deny on <code>DeleteRole</code> and <code>DetachRolePolicy</code> backs the split up, so it does not rely on layout alone.',
           'Side effect worth having: ECR images now survive a destroy.',
         ],
       },
@@ -234,7 +234,7 @@ export const projects: Project[] = [
         points: [
           'Domain, state bucket, lock table and region are variables. The backend is configured at init time.',
           'IAM policy ARNs are built from variables, so no account ID is committed.',
-          'The repository can be forked and deployed by setting GitHub variables rather than editing Terraform.',
+          'The repository can be forked and deployed by setting GitHub variables, with no Terraform to edit.',
         ],
       },
       {
@@ -248,10 +248,10 @@ export const projects: Project[] = [
     shots: [],
     limitations: [
       'The bootstrap root is applied manually with admin credentials. Only the application stack is pipeline-driven.',
-      'State locking uses a DynamoDB table rather than S3 native locking.',
+      'State locking uses a DynamoDB table, not S3 native locking.',
       'A single zonal NAT Gateway trades egress availability for cost. Production would run one per AZ.',
       'One environment, with no alerting and no log retention policy configured.',
-      'Two CVEs are ignored in <code>.grype.yaml</code> with written justification rather than lowering the scan threshold. Neither is reachable from this application.',
+      'Two CVEs are ignored in <code>.grype.yaml</code> with written justification, leaving the scan threshold untouched. Neither is reachable from this application.',
       'The live environment has been torn down after verification.',
     ],
   },
@@ -279,7 +279,7 @@ export const projects: Project[] = [
       'Provisioning infrastructure well is only half of platform work. The other half is noticing when it drifts. IAM is where that drift is least visible: permissions accumulate through one-off grants and temporary escalations that are never revoked, and there is no moment at which anyone is forced to look. This makes over-privileged identities visible and alertable without a manual investigation.',
     approach: [
       'Queries IAM for every user, role and group with AdministratorAccess attached, using STS to verify which account it is actually running against.',
-      'Generates a timestamped report of findings and uploads it to S3, so there is a historical record rather than just a point-in-time answer.',
+      'Generates a timestamped report of findings and uploads it to S3, so there is a historical record, not just a point-in-time answer.',
       'Publishes an SNS email alert only when violations are found, so a clean run stays quiet and an alert means something.',
       'Runs on EC2 under an instance role with a scoped policy committed alongside the script. No credentials are stored anywhere.',
     ],
@@ -288,7 +288,7 @@ export const projects: Project[] = [
         title: 'A detective control, not a preventive one',
         points: [
           'Catches grants that were legitimate when made and never revoked.',
-          'Answers what is true now, rather than what was permitted at the time.',
+          'Answers what is true now, not what was permitted at the time.',
         ],
       },
       {
@@ -329,7 +329,7 @@ export const projects: Project[] = [
       },
     ],
     limitations: [
-      'Detects AdministratorAccess specifically rather than scoring arbitrary policy breadth.',
+      'Detects AdministratorAccess specifically. It does not try to score arbitrary policy breadth.',
       'Scheduling is external to the tool. Planned improvements are tracked in docs/considerations.md.',
     ],
   },

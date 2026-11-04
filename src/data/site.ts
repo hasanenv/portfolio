@@ -26,8 +26,8 @@ export const site = {
 
 export const about: string[] = [
   'I’m a DevOps engineer based in Glasgow. Day to day that means Kubernetes and container platforms, monitoring, CI/CD and the automation that keeps internal systems running. In my own time it means the AWS platforms documented on this site.',
-  'I came into infrastructure by a less conventional route, and what stuck from it is a habit of building things end to end rather than in pieces. Every project here ships with the reasoning and the trade-offs written down next to the code, because the design choices are usually the part worth defending.',
-  'I’m open to platform, cloud or Kubernetes roles where the delivery path is owned end to end, rather than inherited and worked around.',
+  'I came into infrastructure by a less conventional route, and what stuck from it is a habit of building things end to end. Every project here ships with the reasoning and the trade-offs written down next to the code, because the design choices are usually the part worth defending.',
+  'Platform, cloud and Kubernetes work is where I’m strongest, and I’m open to any role where the delivery path is owned end to end and the design decisions come with it.',
 ];
 
 export interface SkillGroup {
